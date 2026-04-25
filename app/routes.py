@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
+from .models import Session
+from .schemas import SessionCreate, SessionOut, AudioUpdate, TranscriptUpdate
 
 from .db import get_db
 from . import models, schemas
@@ -63,3 +65,93 @@ def create_client(
 @router.get("/llm-test")
 async def llm_test():
     return await test_llm()
+
+# 📅 CREATE SESSION
+@router.post("/sessions", response_model=SessionOut)
+def create_session(
+    data: SessionCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    session = Session(
+        client_id=data.client_id,
+        session_date=data.session_date,
+        psychologist_id=current_user.id
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+# 📅 GET ALL SESSIONS
+@router.get("/sessions", response_model=list[SessionOut])
+def get_sessions(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return db.query(Session).filter(
+        Session.psychologist_id == current_user.id
+    ).all()
+
+
+# 📅 GET ONE SESSION
+@router.get("/sessions/{session_id}", response_model=SessionOut)
+def get_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    session = db.query(Session).filter(
+        Session.id == session_id,
+        Session.psychologist_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return session
+
+
+# 🎧 ADD AUDIO
+@router.post("/sessions/{session_id}/audio")
+def add_audio(
+    session_id: int,
+    data: AudioUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    session = db.query(Session).filter(
+        Session.id == session_id,
+        Session.psychologist_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    session.audio_url = data.audio_url
+    db.commit()
+
+    return {"status": "audio added"}
+
+
+# 📝 ADD TRANSCRIPT
+@router.post("/sessions/{session_id}/transcript")
+def add_transcript(
+    session_id: int,
+    data: TranscriptUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    session = db.query(Session).filter(
+        Session.id == session_id,
+        Session.psychologist_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    session.transcript = data.transcript
+    db.commit()
+
+    return {"status": "transcript added"}
