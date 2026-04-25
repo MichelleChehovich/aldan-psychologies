@@ -11,3 +11,7 @@ def root():
     return {"status": "alive"}
 
 print("🔥 STEP 3")
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
