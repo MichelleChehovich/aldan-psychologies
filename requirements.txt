@@ -6,4 +6,4 @@ pydantic
 python-dotenv
 httpx
 passlib[bcrypt]
-python-jose
+python-jose[cryptography]
