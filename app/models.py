@@ -36,7 +36,7 @@ class Client(Base):
     auto = Column(Text)
     credit_ippoteka = Column(Text)
 
-class Session(Base):
+class TherapySession(Base):
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True, index=True)
