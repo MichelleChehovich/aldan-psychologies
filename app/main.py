@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from .db import Base, engine
 from .routes import router
 
+print("APP STARTED")
 app = FastAPI()
 
 @app.get("/")
