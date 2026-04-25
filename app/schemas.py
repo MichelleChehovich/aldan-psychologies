@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 
+
 class PsychologistCreate(BaseModel):
     email: str
     password: str
 
+
 class ClientCreate(BaseModel):
     name: str
-    psychologist_id: int
+
