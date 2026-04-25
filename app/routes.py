@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from .models import Session as SessionModel
+from .models import TherapySession
 from .schemas import SessionCreate, SessionOut, AudioUpdate, TranscriptUpdate
 
 from .db import get_db
@@ -71,7 +71,7 @@ async def llm_test():
 
 
 # =========================
-# 📅 SESSIONS
+# 📅 SESSIONS (TherapySession)
 # =========================
 
 # CREATE SESSION
@@ -81,7 +81,7 @@ def create_session(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = SessionModel(
+    session = TherapySession(
         client_id=data.client_id,
         session_date=data.session_date,
         psychologist_id=current_user.id
@@ -98,8 +98,8 @@ def get_sessions(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return db.query(SessionModel).filter(
-        SessionModel.psychologist_id == current_user.id
+    return db.query(TherapySession).filter(
+        TherapySession.psychologist_id == current_user.id
     ).all()
 
 
@@ -110,9 +110,9 @@ def get_session(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.psychologist_id == current_user.id
+    session = db.query(TherapySession).filter(
+        TherapySession.id == session_id,
+        TherapySession.psychologist_id == current_user.id
     ).first()
 
     if not session:
@@ -129,9 +129,9 @@ def add_audio(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.psychologist_id == current_user.id
+    session = db.query(TherapySession).filter(
+        TherapySession.id == session_id,
+        TherapySession.psychologist_id == current_user.id
     ).first()
 
     if not session:
@@ -151,9 +151,9 @@ def add_transcript(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.psychologist_id == current_user.id
+    session = db.query(TherapySession).filter(
+        TherapySession.id == session_id,
+        TherapySession.psychologist_id == current_user.id
     ).first()
 
     if not session:
