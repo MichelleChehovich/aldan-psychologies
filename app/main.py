@@ -17,7 +17,7 @@ app.include_router(router)
 
 print("🔥 DB INIT")
 
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 
 #from fastapi import FastAPI
