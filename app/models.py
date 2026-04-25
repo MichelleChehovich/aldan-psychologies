@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey
+#from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey
+#from datetime import datetime
+#from .db import Base
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from datetime import datetime
 from .db import Base
 
@@ -32,3 +35,20 @@ class Client(Base):
     residence = Column(Text)
     auto = Column(Text)
     credit_ippoteka = Column(Text)
+
+class Session(Base):
+    __tablename__ = "sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    psychologist_id = Column(Integer, ForeignKey("psychologists.id"))
+    client_id = Column(Integer, ForeignKey("clients.id"))
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    session_date = Column(DateTime)
+
+    audio_url = Column(Text, nullable=True)
+    transcript = Column(Text, nullable=True)
+    summary = Column(Text, nullable=True)
+
+    status = Column(String, default="planned")
