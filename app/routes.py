@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
-from .models import Session
+from sqlalchemy.orm import Session
+
+from .models import Session as SessionModel
 from .schemas import SessionCreate, SessionOut, AudioUpdate, TranscriptUpdate
 
 from .db import get_db
@@ -49,6 +50,7 @@ def me(current_user: models.Psychologist = Depends(get_current_user)):
     return current_user
 
 
+# 👤 CREATE CLIENT
 @router.post("/clients")
 def create_client(
     data: schemas.ClientCreate,
@@ -62,18 +64,24 @@ def create_client(
     return client
 
 
+# 🤖 LLM TEST
 @router.get("/llm-test")
 async def llm_test():
     return await test_llm()
 
-# 📅 CREATE SESSION
+
+# =========================
+# 📅 SESSIONS
+# =========================
+
+# CREATE SESSION
 @router.post("/sessions", response_model=SessionOut)
 def create_session(
     data: SessionCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = Session(
+    session = SessionModel(
         client_id=data.client_id,
         session_date=data.session_date,
         psychologist_id=current_user.id
@@ -84,27 +92,27 @@ def create_session(
     return session
 
 
-# 📅 GET ALL SESSIONS
+# GET ALL SESSIONS
 @router.get("/sessions", response_model=list[SessionOut])
 def get_sessions(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return db.query(Session).filter(
-        Session.psychologist_id == current_user.id
+    return db.query(SessionModel).filter(
+        SessionModel.psychologist_id == current_user.id
     ).all()
 
 
-# 📅 GET ONE SESSION
+# GET ONE SESSION
 @router.get("/sessions/{session_id}", response_model=SessionOut)
 def get_session(
     session_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = db.query(Session).filter(
-        Session.id == session_id,
-        Session.psychologist_id == current_user.id
+    session = db.query(SessionModel).filter(
+        SessionModel.id == session_id,
+        SessionModel.psychologist_id == current_user.id
     ).first()
 
     if not session:
@@ -113,7 +121,7 @@ def get_session(
     return session
 
 
-# 🎧 ADD AUDIO
+# ADD AUDIO
 @router.post("/sessions/{session_id}/audio")
 def add_audio(
     session_id: int,
@@ -121,9 +129,9 @@ def add_audio(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = db.query(Session).filter(
-        Session.id == session_id,
-        Session.psychologist_id == current_user.id
+    session = db.query(SessionModel).filter(
+        SessionModel.id == session_id,
+        SessionModel.psychologist_id == current_user.id
     ).first()
 
     if not session:
@@ -135,7 +143,7 @@ def add_audio(
     return {"status": "audio added"}
 
 
-# 📝 ADD TRANSCRIPT
+# ADD TRANSCRIPT
 @router.post("/sessions/{session_id}/transcript")
 def add_transcript(
     session_id: int,
@@ -143,9 +151,9 @@ def add_transcript(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    session = db.query(Session).filter(
-        Session.id == session_id,
-        Session.psychologist_id == current_user.id
+    session = db.query(SessionModel).filter(
+        SessionModel.id == session_id,
+        SessionModel.psychologist_id == current_user.id
     ).first()
 
     if not session:
