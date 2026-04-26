@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from .models import TherapySession
 from .schemas import SessionCreate, SessionOut, AudioUpdate, TranscriptUpdate
 
+from .stt import download_audio, transcribe_audio
+
 from .db import get_db
 from . import models, schemas
 from .llm import test_llm
@@ -163,3 +165,37 @@ def add_transcript(
     db.commit()
 
     return {"status": "transcript added"}
+
+# STT Provider Layer
+@router.post("/sessions/{session_id}/process-audio")
+async def process_audio(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    session = db.query(TherapySession).filter(
+        TherapySession.id == session_id,
+        TherapySession.psychologist_id == current_user.id
+    ).first()
+
+    if not session or not session.audio_url:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    # 1. скачать аудио
+    audio_bytes = await download_audio(session.audio_url)
+
+    # 2. транскрибировать
+    transcript = await transcribe_audio(audio_bytes)
+
+    # 3. сохранить
+    session.transcript = transcript
+    session.status = "processed"
+
+    db.commit()
+
+    return {"status": "done", "transcript": transcript}
+
+
+
+
+
