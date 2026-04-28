@@ -1,9 +1,8 @@
-#from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey
-#from datetime import datetime
-#from .db import Base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey
 from datetime import datetime
-#from .db import Base
+
+Base = declarative_base()
 
 class Psychologist(Base):
     __tablename__ = "psychologists"
