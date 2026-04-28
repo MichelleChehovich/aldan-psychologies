@@ -1,6 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import os
+from .models import Base
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
 
@@ -10,6 +11,7 @@ engine = create_engine(
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def get_db():
     db = SessionLocal()
