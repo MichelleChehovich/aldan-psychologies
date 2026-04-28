@@ -21,12 +21,13 @@ def health():
     return {"status": "ok"}
 
 
+# 🔐 REGISTRATION
 @router.post("/register")
 def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
     try:
         user = models.Psychologist(
             email=data.email,
-            password=hash_password(data.password)
+            password=hash_password(data.password[:72])  # фикс bcrypt
         )
 
         db.add(user)
@@ -44,20 +45,20 @@ def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# 🔐 LOGIN
 @router.post("/login")
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-
-    user = db.query(models.Psychologist).filter(
-        models.Psychologist.email == form_data.username
-    ).first()
+    user = db.query(models.Psychologist)\
+        .filter(models.Psychologist.email == form_data.username)\
+        .first()
 
     if not user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
-    if not verify_password(form_data.password, user.password):
+    if not verify_password(form_data.password[:72], user.password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     token = create_access_token({"sub": str(user.id)})
@@ -68,29 +69,40 @@ def login(
     }
 
 
+# 🔒 CURRENT USER
 @router.get("/me")
 def me(current_user: models.Psychologist = Depends(get_current_user)):
     return current_user
 
 
+# 👤 CREATE CLIENT
 @router.post("/clients")
 def create_client(
     data: schemas.ClientCreate,
     db: Session = Depends(get_db),
     current_user: models.Psychologist = Depends(get_current_user)
 ):
-    client = models.Client(**data.dict(), psychologist_id=current_user.id)
+    client = models.Client(
+        **data.dict(),
+        psychologist_id=current_user.id
+    )
     db.add(client)
     db.commit()
     db.refresh(client)
     return client
 
 
+# 🤖 LLM TEST
 @router.get("/llm-test")
 async def llm_test():
     return await test_llm()
 
 
+# =========================
+# 📅 SESSIONS
+# =========================
+
+# CREATE SESSION
 @router.post("/sessions", response_model=SessionOut)
 def create_session(
     data: SessionCreate,
@@ -108,6 +120,7 @@ def create_session(
     return session
 
 
+# GET ALL SESSIONS
 @router.get("/sessions", response_model=list[SessionOut])
 def get_sessions(
     db: Session = Depends(get_db),
@@ -118,6 +131,7 @@ def get_sessions(
     ).all()
 
 
+# GET ONE SESSION
 @router.get("/sessions/{session_id}", response_model=SessionOut)
 def get_session(
     session_id: int,
@@ -135,6 +149,7 @@ def get_session(
     return session
 
 
+# ADD AUDIO
 @router.post("/sessions/{session_id}/audio")
 def add_audio(
     session_id: int,
@@ -156,6 +171,7 @@ def add_audio(
     return {"status": "audio added"}
 
 
+# ADD TRANSCRIPT
 @router.post("/sessions/{session_id}/transcript")
 def add_transcript(
     session_id: int,
@@ -177,6 +193,7 @@ def add_transcript(
     return {"status": "transcript added"}
 
 
+# 🎧 PROCESS AUDIO
 @router.post("/sessions/{session_id}/process-audio")
 async def process_audio(
     session_id: int,
@@ -199,4 +216,7 @@ async def process_audio(
 
     db.commit()
 
-    return {"status": "done", "transcript": transcript}
+    return {
+        "status": "done",
+        "transcript": transcript
+    }
