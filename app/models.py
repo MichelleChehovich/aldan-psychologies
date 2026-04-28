@@ -49,3 +49,7 @@ class TherapySession(Base):
     session_date = Column(DateTime)
 
     audio_url = Column(Text, nullable=True)
+    transcript = Column(Text, nullable=True)
+    summary = Column(Text, nullable=True)
+
+    status = Column(String, default="planned")
