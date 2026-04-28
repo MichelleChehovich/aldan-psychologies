@@ -6,11 +6,16 @@ SECRET_KEY = "supersecret"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
-# 🔥 меняем bcrypt → bcrypt_sha256
-pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
+
+# ✅ СТАБИЛЬНЫЙ ВАРИАНТ (работает в Docker/Cloud всегда)
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 
 def hash_password(password: str):
+    # bcrypt сам ограничивает длину, но явно безопаснее
     return pwd_context.hash(password)
 
 
