@@ -23,10 +23,6 @@ def health():
 
 @router.post("/register")
 def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
-
-    print("TYPE:", type(data.password))
-    print("VALUE:", data.password)
-
     try:
         user = models.Psychologist(
             email=data.email,
@@ -45,23 +41,21 @@ def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
         }
 
     except Exception as e:
-        # важно: не скрываем HTTP статус
         raise HTTPException(status_code=500, detail=str(e))
-# 
+
+
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
 
-    user = db.query(models.Psychologist)\
-        .filter(models.Psychologist.email == form_data.username)\
-        .first()
-
-    print("INPUT:", form_data.password)
+    user = db.query(models.Psychologist).filter(
+        models.Psychologist.email == form_data.username
+    ).first()
 
     if not user:
-        print("DB: user NOT FOUND")
         raise HTTPException(status_code=400, detail="Invalid credentials")
-
-    print("DB:", user.password)
 
     if not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
@@ -72,26 +66,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "access_token": token,
         "token_type": "bearer"
     }
-    
-# 🔐 LOGIN
-#@router.post("/login")
-#def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-#    user = db.query(models.Psychologist).filter(models.Psychologist.email == form_data.username).first()
-    
-#    if not user or not verify_password(form_data.password, user.password):
-#        raise HTTPException(status_code=400, detail="Invalid credentials")
-
-#    token = create_access_token({"sub": str(user.id)})
-#    return {"access_token": token, "token_type": "bearer"}
 
 
-# 🔒 PROTECTED ROUTE
 @router.get("/me")
 def me(current_user: models.Psychologist = Depends(get_current_user)):
     return current_user
 
 
-# 👤 CREATE CLIENT
 @router.post("/clients")
 def create_client(
     data: schemas.ClientCreate,
@@ -105,17 +86,11 @@ def create_client(
     return client
 
 
-# 🤖 LLM TEST
 @router.get("/llm-test")
 async def llm_test():
     return await test_llm()
 
 
-# =========================
-# 📅 SESSIONS (TherapySession)
-# =========================
-
-# CREATE SESSION
 @router.post("/sessions", response_model=SessionOut)
 def create_session(
     data: SessionCreate,
@@ -133,7 +108,6 @@ def create_session(
     return session
 
 
-# GET ALL SESSIONS
 @router.get("/sessions", response_model=list[SessionOut])
 def get_sessions(
     db: Session = Depends(get_db),
@@ -144,7 +118,6 @@ def get_sessions(
     ).all()
 
 
-# GET ONE SESSION
 @router.get("/sessions/{session_id}", response_model=SessionOut)
 def get_session(
     session_id: int,
@@ -162,7 +135,6 @@ def get_session(
     return session
 
 
-# ADD AUDIO
 @router.post("/sessions/{session_id}/audio")
 def add_audio(
     session_id: int,
@@ -184,7 +156,6 @@ def add_audio(
     return {"status": "audio added"}
 
 
-# ADD TRANSCRIPT
 @router.post("/sessions/{session_id}/transcript")
 def add_transcript(
     session_id: int,
@@ -205,7 +176,7 @@ def add_transcript(
 
     return {"status": "transcript added"}
 
-# STT Provider Layer
+
 @router.post("/sessions/{session_id}/process-audio")
 async def process_audio(
     session_id: int,
@@ -220,21 +191,12 @@ async def process_audio(
     if not session or not session.audio_url:
         raise HTTPException(status_code=404, detail="Audio not found")
 
-    # 1. скачать аудио
     audio_bytes = await download_audio(session.audio_url)
-
-    # 2. транскрибировать
     transcript = await transcribe_audio(audio_bytes)
 
-    # 3. сохранить
     session.transcript = transcript
     session.status = "processed"
 
     db.commit()
 
     return {"status": "done", "transcript": transcript}
-
-
-
-
-
