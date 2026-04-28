@@ -8,12 +8,18 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 
 # ✅ СТАБИЛЬНЫЙ ВАРИАНТ (работает в Docker/Cloud всегда)
+
+#pwd_context = CryptContext(
+#    schemes=["bcrypt"],
+#    deprecated="auto"
+#)
+#
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
+    schemes=["sha256_crypt"],
     deprecated="auto"
 )
 
-
+#
 def hash_password(password: str):
     # bcrypt сам ограничивает длину, но явно безопаснее
     return pwd_context.hash(password)
