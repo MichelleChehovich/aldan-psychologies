@@ -3,7 +3,7 @@
 #from .db import Base
 from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey
 from datetime import datetime
-from .db import Base
+#from .db import Base
 
 class Psychologist(Base):
     __tablename__ = "psychologists"
