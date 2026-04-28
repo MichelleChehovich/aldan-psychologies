@@ -50,7 +50,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
-
+print("INPUT:", form_data.password)
+print("DB:", user.password)
 
 # 🔒 PROTECTED ROUTE
 @router.get("/me")
