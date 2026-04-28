@@ -4,6 +4,7 @@ from datetime import datetime
 
 Base = declarative_base()
 
+
 class Psychologist(Base):
     __tablename__ = "psychologists"
 
@@ -35,6 +36,7 @@ class Client(Base):
     auto = Column(Text)
     credit_ippoteka = Column(Text)
 
+
 class TherapySession(Base):
     __tablename__ = "sessions"
 
@@ -47,7 +49,3 @@ class TherapySession(Base):
     session_date = Column(DateTime)
 
     audio_url = Column(Text, nullable=True)
-    transcript = Column(Text, nullable=True)
-    summary = Column(Text, nullable=True)
-
-    status = Column(String, default="planned")
