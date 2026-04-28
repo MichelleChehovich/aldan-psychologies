@@ -39,19 +39,43 @@ def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
 
     except Exception as e:
         return {"error": str(e)}
-
-# 🔐 LOGIN
+# 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(models.Psychologist).filter(models.Psychologist.email == form_data.username).first()
-    
-    if not user or not verify_password(form_data.password, user.password):
+
+    user = db.query(models.Psychologist)\
+        .filter(models.Psychologist.email == form_data.username)\
+        .first()
+
+    print("INPUT:", form_data.password)
+
+    if not user:
+        print("DB: user NOT FOUND")
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    print("DB:", user.password)
+
+    if not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     token = create_access_token({"sub": str(user.id)})
-    return {"access_token": token, "token_type": "bearer"}
-print("INPUT:", form_data.password)
-print("DB:", user.password)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
+    
+# 🔐 LOGIN
+#@router.post("/login")
+#def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+#    user = db.query(models.Psychologist).filter(models.Psychologist.email == form_data.username).first()
+    
+#    if not user or not verify_password(form_data.password, user.password):
+#        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+#    token = create_access_token({"sub": str(user.id)})
+#    return {"access_token": token, "token_type": "bearer"}
+
 
 # 🔒 PROTECTED ROUTE
 @router.get("/me")
