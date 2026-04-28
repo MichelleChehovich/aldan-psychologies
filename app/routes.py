@@ -26,11 +26,14 @@ def health():
 def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
     user = models.Psychologist(
         email=data.email,
-        password=hash_password(data.password)
+#       password=hash_password(data.password)
+        password=data.password   # 👈 временно без хеша
     )
+
     db.add(user)
     db.commit()
     db.refresh(user)
+
     return user
 
 
