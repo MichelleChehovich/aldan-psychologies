@@ -1,5 +1,4 @@
 from sqlalchemy.orm import sessionmaker
-from .models import Base
 from sqlalchemy import create_engine
 import os
 
