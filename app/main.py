@@ -1,8 +1,8 @@
 print("🔥 MAIN START")
 
 from fastapi import FastAPI
-from .db import engine
 from .models import Base
+from .db import engine
 from .routes import router
 
 print("🔥 IMPORTS OK")
