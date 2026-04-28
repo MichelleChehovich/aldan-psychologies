@@ -24,18 +24,20 @@ def health():
 # 🔐 REGISTRATION
 @router.post("/register")
 def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
-    user = models.Psychologist(
-        email=data.email,
-#       password=hash_password(data.password)
-        password=data.password   # 👈 временно без хеша
-    )
+    try:
+        user = models.Psychologist(
+            email=data.email,
+            password=data.password
+        )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    return user
+        return user
 
+    except Exception as e:
+        return {"error": str(e)}
 
 # 🔐 LOGIN
 @router.post("/login")
