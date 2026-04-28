@@ -27,7 +27,8 @@ def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
     try:
         user = models.Psychologist(
             email=data.email,
-            password=data.password
+            #password=data.password
+            password=hash_password(data.password)
         )
 
         db.add(user)
@@ -43,7 +44,7 @@ def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.Psychologist).filter(models.Psychologist.email == form_data.username).first()
-
+    
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
