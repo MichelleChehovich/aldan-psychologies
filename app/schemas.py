@@ -5,7 +5,8 @@ from pydantic import BaseModel, EmailStr
 # 🔐 AUTH
 
 class PsychologistCreate(BaseModel):
-    email: EmailStr
+    #email: EmailStr
+    email: str
     password: str
 
 
