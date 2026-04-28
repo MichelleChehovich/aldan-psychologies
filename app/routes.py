@@ -21,13 +21,15 @@ def health():
     return {"status": "ok"}
 
 
-# 🔐 REGISTRATION
 @router.post("/register")
 def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
+
+    print("TYPE:", type(data.password))
+    print("VALUE:", data.password)
+
     try:
         user = models.Psychologist(
             email=data.email,
-            #password=data.password
             password=hash_password(data.password)
         )
 
@@ -35,10 +37,16 @@ def register(data: schemas.PsychologistCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
-        return user
+        return {
+            "id": user.id,
+            "email": user.email,
+            "created_at": user.created_at,
+            "role": user.role
+        }
 
     except Exception as e:
-        return {"error": str(e)}
+        # важно: не скрываем HTTP статус
+        raise HTTPException(status_code=500, detail=str(e))
 # 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
