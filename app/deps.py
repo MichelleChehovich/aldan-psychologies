@@ -1,32 +1,21 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from sqlalchemy.orm import Session
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from supabase import create_client
 
-from .db import get_db
-from .models import Psychologist
-from .auth import SECRET_KEY, ALGORITHM
+SUPABASE_URL = "https://zxkbsnmeoyofihwkohnr.supabase.co"
+SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+security = HTTPBearer()
 
 
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
 
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+    user = supabase.auth.get_user(token)
 
-    except JWTError:
+    if not user.user:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    user = db.query(Psychologist).filter(Psychologist.id == int(user_id)).first()
-
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-
-    return user
+    return user.user
