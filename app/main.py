@@ -35,17 +35,22 @@ def register(data: AuthData):
 
 @app.post("/login")
 def login(data: AuthData):
-    res = supabase.auth.sign_in_with_password({
-        "email": data.email,
-        "password": data.password
-    })
+    try:
+        res = supabase.auth.sign_in_with_password({
+            "email": data.email,
+            "password": data.password
+        })
 
-    if res.user is None or res.session is None:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        if res.user is None or res.session is None:
+            raise HTTPException(status_code=400, detail="Invalid credentials")
 
-    return {
-        "access_token": res.session.access_token
-    }
+        return {
+            "access_token": res.session.access_token,
+            "user_id": res.user.id
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # 🔥 ВОТ ЭТО ГЛАВНОЕ
