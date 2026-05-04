@@ -12,12 +12,16 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 security = HTTPBearer()
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-
-    user = supabase.auth.get_user(token)
-
-    if not user.user:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+    except:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    return user.user
+    user = db.query(Psychologist).filter(Psychologist.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
