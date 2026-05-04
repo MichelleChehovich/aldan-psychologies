@@ -22,15 +22,28 @@ class AuthData(BaseModel):
 
 @app.post("/register")
 def register(data: AuthData):
-    res = supabase.auth.sign_up({
-        "email": data.email,
-        "password": data.password
-    })
+    try:
+        res = supabase.auth.sign_up({
+            "email": data.email,
+            "password": data.password
+        })
 
-    if res.user is None:
-        raise HTTPException(status_code=400, detail="Register failed")
+        if res.user is None:
+            raise HTTPException(status_code=400, detail="Registration failed")
 
-    return {"user_id": res.user.id, "email": res.user.email}
+        # 👉 ВАЖНО: создаём профиль
+        supabase.table("profiles").insert({
+            "id": res.user.id,
+            "email": res.user.email
+        }).execute()
+
+        return {
+            "user_id": res.user.id,
+            "email": res.user.email
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/login")
