@@ -66,10 +66,26 @@ def login(data: AuthData):
 # 🔥 ВОТ ЭТО ГЛАВНОЕ
 @app.get("/me")
 def me(user = Depends(get_current_user)):
-    return JSONResponse(content={
-        "user_id": user.id,
-        "email": user.email
-    })
+    try:
+        # 🔹 берём профиль из таблицы profiles
+        profile_res = supabase.table("profiles") \
+            .select("*") \
+            .eq("id", user.id) \
+            .single() \
+            .execute()
+
+        profile = profile_res.data if profile_res.data else None
+
+        return {
+            "auth": {
+                "user_id": user.id,
+                "email": user.email
+            },
+            "profile": profile
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 def root():
