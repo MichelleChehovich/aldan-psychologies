@@ -90,3 +90,26 @@ def me(user = Depends(get_current_user)):
 @app.get("/")
 def root():
     return {"status": "alive"}
+
+class ClientCreate(BaseModel):
+    name: str
+    email: str | None = None
+    phone: str | None = None
+    notes: str | None = None
+
+
+@app.post("/clients")
+def create_client(data: ClientCreate, user=Depends(get_current_user)):
+    try:
+        res = supabase.table("clients").insert({
+            "psychologist_id": user.id,  # 🔥 связь с текущим пользователем
+            "name": data.name,
+            "email": data.email,
+            "phone": data.phone,
+            "notes": data.notes
+        }).execute()
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
