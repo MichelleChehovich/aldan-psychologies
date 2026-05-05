@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from supabase import create_client
 from .deps import get_current_user
+from fastapi.responses import JSONResponse
 
 SUPABASE_URL = "https://gfqafwrjrixglddpiluc.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmcWFmd3Jqcml4Z2xkZHBpbHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTU0NzUsImV4cCI6MjA5MzQ3MTQ3NX0.9hQDdgqyQWVofEzTG4gIPHFELtOsDLU0rISEJVpx3ws"
@@ -65,11 +66,10 @@ def login(data: AuthData):
 # 🔥 ВОТ ЭТО ГЛАВНОЕ
 @app.get("/me")
 def me(user = Depends(get_current_user)):
-    return {
+    return JSONResponse(content={
         "user_id": user.id,
         "email": user.email
-    }
-
+    })
 
 @app.get("/")
 def root():
