@@ -113,3 +113,12 @@ def create_client(data: ClientCreate, user=Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/clients")
+def get_clients(user=Depends(get_current_user)):
+    res = supabase.table("clients") \
+        .select("*") \
+        .eq("psychologist_id", user.id) \
+        .execute()
+
+    return res.data
