@@ -3,6 +3,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client
 from .config import SUPABASE_URL, SUPABASE_KEY
 
+print("ENV CHECK:")
+print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+print("SUPABASE_KEY:", os.getenv("SUPABASE_KEY"))
+
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 security = HTTPBearer()
