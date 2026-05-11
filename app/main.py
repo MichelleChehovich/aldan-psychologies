@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from supabase import create_client
 from .deps import get_current_user
 from fastapi.responses import JSONResponse
-
-SUPABASE_URL = "https://gfqafwrjrixglddpiluc.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmcWFmd3Jqcml4Z2xkZHBpbHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTU0NzUsImV4cCI6MjA5MzQ3MTQ3NX0.9hQDdgqyQWVofEzTG4gIPHFELtOsDLU0rISEJVpx3ws"
+from .config import SUPABASE_URL, SUPABASE_KEY
+#SUPABASE_URL = "https://gfqafwrjrixglddpiluc.supabase.co"
+#SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmcWFmd3Jqcml4Z2xkZHBpbHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTU0NzUsImV4cCI6MjA5MzQ3MTQ3NX0.9hQDdgqyQWVofEzTG4gIPHFELtOsDLU0rISEJVpx3ws"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
