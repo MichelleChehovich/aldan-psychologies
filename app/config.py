@@ -2,8 +2,8 @@
 #import os
 import os
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")   # это команда Pithon - возьми значение переменной из окружения Timeweb
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")   # это команда Pithon - возьми значение переменной из окружения Timeweb
 
 
 
