@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client
 from .config import SUPABASE_URL, SUPABASE_KEY
+import os
 
 print("🔥 DEPS LOADED")
 print("ENV CHECK:")
