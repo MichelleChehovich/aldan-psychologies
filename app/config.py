@@ -1,17 +1,4 @@
-#from dotenv import load_dotenv
-#import os
 import os
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")   # это команда Pithon - возьми значение переменной из окружения Timeweb
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")   # это команда Pithon - возьми значение переменной из окружения Timeweb
-
-
-
-#load_dotenv()
-
-#SUPABASE_URL = os.getenv("SUPABASE_URL")
-#SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-#OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-#JWT_SECRET = os.getenv("JWT_SECRET")
+SUPABASE_URL = os.getenv("SUPABASE_URL")  
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")  
