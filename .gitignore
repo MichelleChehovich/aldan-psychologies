@@ -6,11 +6,11 @@ __pycache__/
 *.pyc
 
 # venv
-venv/
-.venv/
+##venv/
+##.venv/
 
 # vscode
-.vscode/
+##.vscode/
 
 # macOS
-.DS_Store
+##.DS_Store
