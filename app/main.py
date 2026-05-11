@@ -5,6 +5,8 @@ from .deps import get_current_user
 from fastapi.responses import JSONResponse
 from .config import SUPABASE_URL, SUPABASE_KEY
 
+print("🔥 APP STARTED")
+
 #print("SUPABASE_URL =", SUPABASE_URL)
 #print("SUPABASE_KEY =", SUPABASE_KEY)
 
