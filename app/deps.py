@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client
 from .config import SUPABASE_URL, SUPABASE_KEY
 
+print("🔥 DEPS LOADED")
 print("ENV CHECK:")
 print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
 print("SUPABASE_KEY:", os.getenv("SUPABASE_KEY"))
