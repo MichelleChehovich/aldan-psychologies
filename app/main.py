@@ -4,6 +4,7 @@ from supabase import create_client
 from .deps import get_current_user
 from fastapi.responses import JSONResponse
 from .config import SUPABASE_URL, SUPABASE_KEY
+from app.api.routes_sessions import router as sessions_router
 
 print("🔥 APP STARTED")
 
@@ -14,6 +15,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
+app.include_router(sessions_router)
 
 class AuthData(BaseModel):
     email: str
