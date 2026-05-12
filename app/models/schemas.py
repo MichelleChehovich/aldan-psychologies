@@ -38,19 +38,22 @@ class ClientOut(BaseModel):
 # 📅 SESSION
 
 class SessionCreate(BaseModel):
-    client_id: int
-    session_date: datetime
-
+    client_id: str
+    session_date: Optional[datetime] = None
+    title: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    status: Optional[str] = "planned"
 
 class SessionOut(BaseModel):
-    id: int
-    client_id: int
-    session_date: datetime
-    status: str
+    id: str
+    client_id: str
+    session_date: Optional[datetime] = None
+    title: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    status: Optional[str] = None
 
     class Config:
         from_attributes = True
-
 
 # 🎧 AUDIO
 
@@ -62,12 +65,3 @@ class AudioUpdate(BaseModel):
 
 class TranscriptUpdate(BaseModel):
     transcript: str
-
-
-#    SESSIONS 
-class SessionCreate(BaseModel):
-    client_id: str
-    session_date: Optional[datetime] = None
-    title: Optional[str] = None
-    duration_minutes: Optional[int] = None
-    status: Optional[str] = "planned"
