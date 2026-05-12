@@ -12,7 +12,7 @@ class PsychologistCreate(BaseModel):
 
 
 class PsychologistOut(BaseModel):
-    id: int
+    id: str
     email: EmailStr
     created_at: datetime
     role: str
@@ -28,7 +28,7 @@ class ClientCreate(BaseModel):
 
 
 class ClientOut(BaseModel):
-    id: int
+    id: str
     name: str
 
     class Config:
