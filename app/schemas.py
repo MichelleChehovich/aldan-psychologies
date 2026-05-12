@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 
 # 🔐 AUTH
@@ -61,3 +62,12 @@ class AudioUpdate(BaseModel):
 
 class TranscriptUpdate(BaseModel):
     transcript: str
+
+
+#    SESSIONS 
+class SessionCreate(BaseModel):
+    client_id: str
+    session_date: Optional[datetime] = None
+    title: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    status: Optional[str] = "planned"
