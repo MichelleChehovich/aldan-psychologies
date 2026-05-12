@@ -16,7 +16,7 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 # CREATE SESSION
 # =====================================================
 
-@router.post("")
+@router.post("/")
 def create_new_session(
     data: SessionCreate,
     user = Depends(get_current_user)
@@ -37,7 +37,7 @@ def create_new_session(
 # GET ALL SESSIONS
 # =====================================================
 
-@router.get("")
+@router.get("/")
 def list_sessions(user = Depends(get_current_user)):
     res = get_sessions(user.id)
 
