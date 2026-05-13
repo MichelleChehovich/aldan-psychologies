@@ -9,13 +9,23 @@ security = HTTPBearer()
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    token = credentials.credentials
+    try:
+        token = credentials.credentials
 
-    supabase = get_supabase()
+        supabase = get_supabase()
 
-    user = supabase.auth.get_user(token)
+        user = supabase.auth.get_user(token)
 
-    if not user.user:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        if not user or not user.user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
 
-    return user.user
+        return user.user
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail=str(e)
+        )
