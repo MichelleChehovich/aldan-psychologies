@@ -10,9 +10,10 @@ router = APIRouter(
 )
 
 
-# =========================
+# =====================================================
 # CREATE SESSION
-# =========================
+# =====================================================
+
 @router.post("/")
 def create_session(
     data: SessionCreate,
@@ -21,32 +22,32 @@ def create_session(
     try:
         supabase = get_supabase()
 
-        res = (
-            supabase
-            .table("sessions")
-            .insert({
-                "psychologist_id": user.id,
-                "client_id": data.client_id,
-                "session_date": (
-                    data.session_date.isoformat()
-                    if data.session_date else None
-                ),
-                "title": data.title,
-                "duration_minutes": data.duration_minutes,
-                "status": data.status
-            })
-            .execute()
-        )
+        res = supabase.table("sessions").insert({
+            "psychologist_id": user.id,
+            "client_id": data.client_id,
+            "session_date": (
+                data.session_date.isoformat()
+                if data.session_date
+                else None
+            ),
+            "title": data.title,
+            "duration_minutes": data.duration_minutes,
+            "status": data.status
+        }).execute()
 
         return res.data
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
-# =========================
+# =====================================================
 # GET ALL SESSIONS
-# =========================
+# =====================================================
+
 @router.get("/")
 def get_sessions(user=Depends(get_current_user)):
     try:
@@ -57,19 +58,22 @@ def get_sessions(user=Depends(get_current_user)):
             .table("sessions")
             .select("*")
             .eq("psychologist_id", user.id)
-            .order("created_at", desc=True)
             .execute()
         )
 
         return res.data
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
-# =========================
+# =====================================================
 # GET ONE SESSION
-# =========================
+# =====================================================
+
 @router.get("/{session_id}")
 def get_session(
     session_id: str,
@@ -91,4 +95,7 @@ def get_session(
         return res.data
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
