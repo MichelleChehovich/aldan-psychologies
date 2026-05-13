@@ -1,4 +1,5 @@
-from app.core.supabase import get_supabase
+#from app.core.supabase import get_supabase
+from app.supabase import get_supabase
 
 # =====================================================
 # CREATE SESSION
