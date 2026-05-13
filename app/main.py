@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 
-from .deps import get_current_user
+from app.deps import get_current_user
 from app.supabase import get_supabase
 from app.api.routes_sessions import router as sessions_router
 
@@ -9,13 +9,41 @@ print("🔥 APP STARTED")
 
 app = FastAPI()
 
+# =====================================================
+# ROUTERS
+# =====================================================
+
 app.include_router(sessions_router)
 
+
+# =====================================================
+# SCHEMAS
+# =====================================================
 
 class AuthData(BaseModel):
     email: str
     password: str
 
+
+class ClientCreate(BaseModel):
+    name: str
+    email: str | None = None
+    phone: str | None = None
+    notes: str | None = None
+
+
+# =====================================================
+# ROOT
+# =====================================================
+
+@app.get("/")
+def root():
+    return {"status": "alive"}
+
+
+# =====================================================
+# AUTH
+# =====================================================
 
 @app.post("/register")
 def register(data: AuthData):
@@ -28,7 +56,10 @@ def register(data: AuthData):
         })
 
         if res.user is None:
-            raise HTTPException(status_code=400, detail="Registration failed")
+            raise HTTPException(
+                status_code=400,
+                detail="Registration failed"
+            )
 
         supabase.table("profiles").insert({
             "id": res.user.id,
@@ -55,7 +86,10 @@ def login(data: AuthData):
         })
 
         if res.user is None or res.session is None:
-            raise HTTPException(status_code=400, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid credentials"
+            )
 
         return {
             "access_token": res.session.access_token,
@@ -80,7 +114,11 @@ def me(user=Depends(get_current_user)):
             .execute()
         )
 
-        profile = profile_res.data if profile_res.data else None
+        profile = (
+            profile_res.data
+            if profile_res.data
+            else None
+        )
 
         return {
             "auth": {
@@ -94,20 +132,15 @@ def me(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/")
-def root():
-    return {"status": "alive"}
-
-
-class ClientCreate(BaseModel):
-    name: str
-    email: str | None = None
-    phone: str | None = None
-    notes: str | None = None
-
+# =====================================================
+# CLIENTS
+# =====================================================
 
 @app.post("/clients")
-def create_client(data: ClientCreate, user=Depends(get_current_user)):
+def create_client(
+    data: ClientCreate,
+    user=Depends(get_current_user)
+):
     try:
         supabase = get_supabase()
 
