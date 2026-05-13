@@ -1,21 +1,16 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-from supabase import create_client
+
 from .deps import get_current_user
-from fastapi.responses import JSONResponse
-from .config import SUPABASE_URL, SUPABASE_KEY
+from app.supabase import get_supabase
 from app.api.routes_sessions import router as sessions_router
 
 print("🔥 APP STARTED")
 
-#print("SUPABASE_URL =", SUPABASE_URL)
-#print("SUPABASE_KEY =", SUPABASE_KEY)
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 app = FastAPI()
 
 app.include_router(sessions_router)
+
 
 class AuthData(BaseModel):
     email: str
@@ -25,6 +20,8 @@ class AuthData(BaseModel):
 @app.post("/register")
 def register(data: AuthData):
     try:
+        supabase = get_supabase()
+
         res = supabase.auth.sign_up({
             "email": data.email,
             "password": data.password
@@ -33,7 +30,6 @@ def register(data: AuthData):
         if res.user is None:
             raise HTTPException(status_code=400, detail="Registration failed")
 
-        # 👉 ВАЖНО: создаём профиль
         supabase.table("profiles").insert({
             "id": res.user.id,
             "email": res.user.email
@@ -51,6 +47,8 @@ def register(data: AuthData):
 @app.post("/login")
 def login(data: AuthData):
     try:
+        supabase = get_supabase()
+
         res = supabase.auth.sign_in_with_password({
             "email": data.email,
             "password": data.password
@@ -68,16 +66,19 @@ def login(data: AuthData):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 🔥 ВОТ ЭТО ГЛАВНОЕ
 @app.get("/me")
-def me(user = Depends(get_current_user)):
+def me(user=Depends(get_current_user)):
     try:
-        # 🔹 берём профиль из таблицы profiles
-        profile_res = supabase.table("profiles") \
-            .select("*") \
-            .eq("id", user.id) \
-            .single() \
+        supabase = get_supabase()
+
+        profile_res = (
+            supabase
+            .table("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single()
             .execute()
+        )
 
         profile = profile_res.data if profile_res.data else None
 
@@ -92,9 +93,11 @@ def me(user = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/")
 def root():
     return {"status": "alive"}
+
 
 class ClientCreate(BaseModel):
     name: str
@@ -106,8 +109,10 @@ class ClientCreate(BaseModel):
 @app.post("/clients")
 def create_client(data: ClientCreate, user=Depends(get_current_user)):
     try:
+        supabase = get_supabase()
+
         res = supabase.table("clients").insert({
-            "psychologist_id": user.id,  # 🔥 связь с текущим пользователем
+            "psychologist_id": user.id,
             "name": data.name,
             "email": data.email,
             "phone": data.phone,
@@ -119,11 +124,21 @@ def create_client(data: ClientCreate, user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/clients")
 def get_clients(user=Depends(get_current_user)):
-    res = supabase.table("clients") \
-        .select("*") \
-        .eq("psychologist_id", user.id) \
-        .execute()
+    try:
+        supabase = get_supabase()
 
-    return res.data
+        res = (
+            supabase
+            .table("clients")
+            .select("*")
+            .eq("psychologist_id", user.id)
+            .execute()
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
