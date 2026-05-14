@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app.deps import get_current_user
+from .deps import get_current_user
 from app.supabase import get_supabase
 from app.api.routes_sessions import router as sessions_router
 
@@ -10,40 +11,31 @@ print("🔥 APP STARTED")
 app = FastAPI()
 
 # =====================================================
+# CORS
+# =====================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # позже заменим на frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# =====================================================
 # ROUTERS
 # =====================================================
 
 app.include_router(sessions_router)
 
-
 # =====================================================
-# SCHEMAS
+# AUTH
 # =====================================================
 
 class AuthData(BaseModel):
     email: str
     password: str
 
-
-class ClientCreate(BaseModel):
-    name: str
-    email: str | None = None
-    phone: str | None = None
-    notes: str | None = None
-
-
-# =====================================================
-# ROOT
-# =====================================================
-
-@app.get("/")
-def root():
-    return {"status": "alive"}
-
-
-# =====================================================
-# AUTH
-# =====================================================
 
 @app.post("/register")
 def register(data: AuthData):
@@ -56,10 +48,7 @@ def register(data: AuthData):
         })
 
         if res.user is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Registration failed"
-            )
+            raise HTTPException(status_code=400, detail="Registration failed")
 
         supabase.table("profiles").insert({
             "id": res.user.id,
@@ -86,10 +75,7 @@ def login(data: AuthData):
         })
 
         if res.user is None or res.session is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid credentials"
-            )
+            raise HTTPException(status_code=400, detail="Invalid credentials")
 
         return {
             "access_token": res.session.access_token,
@@ -114,11 +100,7 @@ def me(user=Depends(get_current_user)):
             .execute()
         )
 
-        profile = (
-            profile_res.data
-            if profile_res.data
-            else None
-        )
+        profile = profile_res.data if profile_res.data else None
 
         return {
             "auth": {
@@ -133,45 +115,9 @@ def me(user=Depends(get_current_user)):
 
 
 # =====================================================
-# CLIENTS
+# ROOT
 # =====================================================
 
-@app.post("/clients")
-def create_client(
-    data: ClientCreate,
-    user=Depends(get_current_user)
-):
-    try:
-        supabase = get_supabase()
-
-        res = supabase.table("clients").insert({
-            "psychologist_id": user.id,
-            "name": data.name,
-            "email": data.email,
-            "phone": data.phone,
-            "notes": data.notes
-        }).execute()
-
-        return res.data
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/clients")
-def get_clients(user=Depends(get_current_user)):
-    try:
-        supabase = get_supabase()
-
-        res = (
-            supabase
-            .table("clients")
-            .select("*")
-            .eq("psychologist_id", user.id)
-            .execute()
-        )
-
-        return res.data
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/")
+def root():
+    return {"status": "alive"}
