@@ -59,3 +59,23 @@ def get_session_by_id(psychologist_id: str, session_id: str):
         .single()
         .execute()
     )
+
+# =====================================================
+# GET ALL CLIENT SESSIONS
+# =====================================================
+
+def get_client_sessions(
+    psychologist_id: str,
+    client_id: str
+):
+    supabase = get_supabase()
+
+    return (
+        supabase
+        .table("sessions")
+        .select("*")
+        .eq("psychologist_id", psychologist_id)
+        .eq("client_id", client_id)
+        .order("session_date", desc=True)
+        .execute()
+    )
