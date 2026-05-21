@@ -4,6 +4,10 @@ from app.deps import get_current_user
 from app.schemas import SessionCreate
 from app.supabase import get_supabase
 
+from app.services.session_service import (
+    get_client_sessions
+)
+
 router = APIRouter(
     prefix="/sessions",
     tags=["sessions"]
@@ -90,6 +94,29 @@ def get_session(
             .eq("psychologist_id", user.id)
             .single()
             .execute()
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# =====================================================
+# GET ALL SESSIONS OF CLIENT
+# =====================================================
+
+@router.get("/client/{client_id}")
+def get_sessions_by_client(
+    client_id: str,
+    user=Depends(get_current_user)
+):
+    try:
+        res = get_client_sessions(
+            psychologist_id=user.id,
+            client_id=client_id
         )
 
         return res.data
