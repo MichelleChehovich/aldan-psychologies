@@ -1,11 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import get_current_user
-from app.schemas import SessionCreate
-from app.supabase import get_supabase
+
+from app.schemas import (
+    SessionCreate,
+    SessionMetaUpdate,
+    SessionAudioUpdate,
+    SessionSelfAnalysisUpdate
+)
 
 from app.services.session_service import (
-    get_client_sessions
+    create_session,
+    get_sessions,
+    get_session_by_id,
+    get_client_sessions,
+    update_session_meta,
+    update_session_audio,
+    update_self_analysis
 )
 
 router = APIRouter(
@@ -19,25 +30,19 @@ router = APIRouter(
 # =====================================================
 
 @router.post("/")
-def create_session(
+def create_new_session(
     data: SessionCreate,
     user=Depends(get_current_user)
 ):
     try:
-        supabase = get_supabase()
-
-        res = supabase.table("sessions").insert({
-            "psychologist_id": user.id,
-            "client_id": data.client_id,
-            "session_date": (
-                data.session_date.isoformat()
-                if data.session_date
-                else None
-            ),
-            "title": data.title,
-            "duration_minutes": data.duration_minutes,
-            "status": data.status
-        }).execute()
+        res = create_session(
+            psychologist_id=user.id,
+            client_id=data.client_id,
+            session_date=data.session_date,
+            title=data.title,
+            duration_minutes=data.duration_minutes,
+            status=data.status
+        )
 
         return res.data
 
@@ -53,16 +58,12 @@ def create_session(
 # =====================================================
 
 @router.get("/")
-def get_sessions(user=Depends(get_current_user)):
+def get_all_sessions(
+    user=Depends(get_current_user)
+):
     try:
-        supabase = get_supabase()
-
-        res = (
-            supabase
-            .table("sessions")
-            .select("*")
-            .eq("psychologist_id", user.id)
-            .execute()
+        res = get_sessions(
+            psychologist_id=user.id
         )
 
         return res.data
@@ -75,7 +76,7 @@ def get_sessions(user=Depends(get_current_user)):
 
 
 # =====================================================
-# GET ONE SESSION
+# GET SESSION BY ID
 # =====================================================
 
 @router.get("/{session_id}")
@@ -84,16 +85,9 @@ def get_session(
     user=Depends(get_current_user)
 ):
     try:
-        supabase = get_supabase()
-
-        res = (
-            supabase
-            .table("sessions")
-            .select("*")
-            .eq("id", session_id)
-            .eq("psychologist_id", user.id)
-            .single()
-            .execute()
+        res = get_session_by_id(
+            psychologist_id=user.id,
+            session_id=session_id
         )
 
         return res.data
@@ -104,8 +98,9 @@ def get_session(
             detail=str(e)
         )
 
+
 # =====================================================
-# GET ALL SESSIONS OF CLIENT
+# GET ALL CLIENT SESSIONS
 # =====================================================
 
 @router.get("/client/{client_id}")
@@ -117,6 +112,93 @@ def get_sessions_by_client(
         res = get_client_sessions(
             psychologist_id=user.id,
             client_id=client_id
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPDATE SESSION META
+# =====================================================
+
+@router.patch("/{session_id}/meta")
+def patch_session_meta(
+    session_id: str,
+    data: SessionMetaUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+        update_data = data.model_dump(
+            exclude_unset=True
+        )
+
+        if "session_date" in update_data:
+            update_data["session_date"] = (
+                update_data["session_date"].isoformat()
+            )
+
+        res = update_session_meta(
+            psychologist_id=user.id,
+            session_id=session_id,
+            data=update_data
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPDATE AUDIO URL
+# =====================================================
+
+@router.patch("/{session_id}/audio")
+def patch_audio(
+    session_id: str,
+    data: SessionAudioUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+        res = update_session_audio(
+            psychologist_id=user.id,
+            session_id=session_id,
+            audio_url=data.audio_url
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPDATE SELF ANALYSIS
+# =====================================================
+
+@router.patch("/{session_id}/self-analysis")
+def patch_self_analysis(
+    session_id: str,
+    data: SessionSelfAnalysisUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+        res = update_self_analysis(
+            psychologist_id=user.id,
+            session_id=session_id,
+            analysis_self=data.analysis_self
         )
 
         return res.data
