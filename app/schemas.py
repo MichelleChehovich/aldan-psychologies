@@ -93,3 +93,29 @@ class AudioUpdate(BaseModel):
 
 class TranscriptUpdate(BaseModel):
     transcript: str
+
+# =====================================================
+# SESSION UPDATE: META
+# =====================================================
+
+class SessionMetaUpdate(BaseModel):
+    session_date: Optional[datetime] = None
+    title: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    status: Optional[str] = None
+
+
+# =====================================================
+# SESSION UPDATE: SELF ANALYSIS
+# =====================================================
+
+class SessionSelfAnalysisUpdate(BaseModel):
+    analysis_self: str
+
+
+# =====================================================
+# SESSION UPDATE: AUDIO
+# =====================================================
+
+class SessionAudioUpdate(BaseModel):
+    audio_url: str
