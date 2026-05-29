@@ -1,0 +1,275 @@
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File
+)
+
+from app.deps import get_current_user
+
+from app.schemas import (
+    SessionCreate,
+    SessionMetaUpdate,
+    SessionAudioUpdate,
+    SessionSelfAnalysisUpdate
+)
+
+from app.services.session_service import (
+    create_session,
+    get_sessions,
+    get_session_by_id,
+    get_client_sessions,
+    update_session_meta,
+    update_session_audio,
+    update_self_analysis,
+    upload_audio_file,
+    upload_self_analysis_audio
+)
+
+router = APIRouter(
+    prefix="/sessions",
+    tags=["sessions"]
+)
+
+
+# =====================================================
+# CREATE SESSION
+# =====================================================
+
+@router.post("/")
+def create_new_session(
+    data: SessionCreate,
+    user=Depends(get_current_user)
+):
+    try:
+        res = create_session(
+            psychologist_id=user.id,
+            client_id=data.client_id,
+            session_date=data.session_date,
+            title=data.title,
+            duration_minutes=data.duration_minutes,
+            status=data.status
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# GET ALL SESSIONS
+# =====================================================
+
+@router.get("/")
+def get_all_sessions(
+    user=Depends(get_current_user)
+):
+    try:
+        res = get_sessions(
+            psychologist_id=user.id
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# GET SESSION BY ID
+# =====================================================
+
+@router.get("/{session_id}")
+def get_session(
+    session_id: str,
+    user=Depends(get_current_user)
+):
+    try:
+        res = get_session_by_id(
+            psychologist_id=user.id,
+            session_id=session_id
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# GET ALL CLIENT SESSIONS
+# =====================================================
+
+@router.get("/client/{client_id}")
+def get_sessions_by_client(
+    client_id: str,
+    user=Depends(get_current_user)
+):
+    try:
+        res = get_client_sessions(
+            psychologist_id=user.id,
+            client_id=client_id
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPDATE SESSION META
+# =====================================================
+
+@router.patch("/{session_id}/meta")
+def patch_session_meta(
+    session_id: str,
+    data: SessionMetaUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+        update_data = data.model_dump(
+            exclude_unset=True
+        )
+
+        if "session_date" in update_data:
+            update_data["session_date"] = (
+                update_data["session_date"].isoformat()
+            )
+
+        res = update_session_meta(
+            psychologist_id=user.id,
+            session_id=session_id,
+            data=update_data
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPDATE AUDIO URL
+# =====================================================
+
+@router.patch("/{session_id}/audio")
+def patch_audio(
+    session_id: str,
+    data: SessionAudioUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+        res = update_session_audio(
+            psychologist_id=user.id,
+            session_id=session_id,
+            audio_url=data.audio_url
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPDATE SELF ANALYSIS
+# =====================================================
+
+@router.patch("/{session_id}/self-analysis")
+def patch_self_analysis(
+    session_id: str,
+    data: SessionSelfAnalysisUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+        res = update_self_analysis(
+            psychologist_id=user.id,
+            session_id=session_id,
+            analysis_self=data.analysis_self
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPLOAD SESSION AUDIO FILE
+# =====================================================
+
+@router.post("/{session_id}/upload-audio")
+async def upload_audio(
+    session_id: str,
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    try:
+
+        result = await upload_audio_file(
+            psychologist_id=user.id,
+            session_id=session_id,
+            file=file
+        )
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =====================================================
+# UPLOAD SELF ANALYSIS AUDIO
+# =====================================================
+
+@router.post(
+    "/{session_id}/upload-self-analysis-audio"
+)
+async def upload_self_analysis_audio_endpoint(
+    session_id: str,
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    try:
+
+        result = await upload_self_analysis_audio(
+            psychologist_id=user.id,
+            session_id=session_id,
+            file=file
+        )
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
