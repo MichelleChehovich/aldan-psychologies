@@ -74,6 +74,23 @@ class ClientOut(BaseModel):
         from_attributes = True
 
 # =====================================================
+# CLIENT UPDATE
+# =====================================================
+
+class ClientUpdate(BaseModel):
+
+    name: str | None = None
+
+    email: str | None = None
+    phone: str | None = None
+
+    gender: str | None = None
+    birth_date: str | None = None
+
+    notes: str | None = None
+
+
+# =====================================================
 # SESSIONS
 # =====================================================
 
