@@ -162,6 +162,8 @@ def create_client(
             "name": data.name,
             "email": data.email,
             "phone": data.phone,
+#            "gender": data.gender,
+#            "birth_date": data.birth_date,
             "notes": data.notes
         }).execute()
 
