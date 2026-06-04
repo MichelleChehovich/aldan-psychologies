@@ -163,7 +163,7 @@ def create_client(
             "email": data.email,
             "phone": data.phone,
             "gender": data.gender,
-#            "birth_date": data.birth_date,
+            "birth_date": data.birth_date,
             "notes": data.notes
         }).execute()
 
