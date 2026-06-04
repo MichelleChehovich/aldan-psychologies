@@ -6,7 +6,8 @@ from app.deps import get_current_user
 from app.supabase import get_supabase
 from app.api.routes_sessions import router as sessions_router
 
-from app.schemas import ClientCreate
+#from app.schemas import ClientCreate
+from app.schemas import ( ClientCreate,  ClientUpdate)
 
 print("🔥 APP STARTED")
 
@@ -192,3 +193,39 @@ def get_clients(user=Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================
+# UPDATE CLIENT
+# =====================================================
+
+@app.patch("/clients/{client_id}")
+def update_client(
+    client_id: str,
+    data: ClientUpdate,
+    user=Depends(get_current_user)
+):
+    try:
+
+        supabase = get_supabase()
+
+        update_data = data.model_dump(
+            exclude_unset=True
+        )
+
+        res = (
+            supabase
+            .table("clients")
+            .update(update_data)
+            .eq("id", client_id)
+            .eq("psychologist_id", user.id)
+            .execute()
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
