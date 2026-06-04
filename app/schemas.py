@@ -28,24 +28,50 @@ class PsychologistOut(BaseModel):
 # =====================================================
 
 class ClientCreate(BaseModel):
-    name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
+#    name: str
+#    email: Optional[str] = None
+#    phone: Optional[str] = None
+#    notes: Optional[str] = None
 
+    name: str
+
+    email: str | None = None
+    phone: str | None = None
+
+    gender: str | None = None
+    birth_date: str | None = None
+
+    notes: str | None = None
 
 class ClientOut(BaseModel):
+#    id: str
+#    psychologist_id: str
+#    name: str
+#    email: Optional[str] = None
+#    phone: Optional[str] = None
+#    notes: Optional[str] = None
+#    created_at: Optional[datetime] = None
+
+#    class Config:
+#        from_attributes = True
+
     id: str
     psychologist_id: str
+
     name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
-    created_at: Optional[datetime] = None
+
+    email: str | None = None
+    phone: str | None = None
+
+    gender: str | None = None
+    birth_date: str | None = None
+
+    notes: str | None = None
+
+    created_at: datetime | None = None
 
     class Config:
         from_attributes = True
-
 
 # =====================================================
 # SESSIONS
