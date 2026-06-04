@@ -6,6 +6,8 @@ from app.deps import get_current_user
 from app.supabase import get_supabase
 from app.api.routes_sessions import router as sessions_router
 
+from app.schemas import ClientCreate
+
 print("🔥 APP STARTED")
 
 app = FastAPI()
@@ -38,11 +40,11 @@ class AuthData(BaseModel):
     password: str
 
 
-class ClientCreate(BaseModel):
-    name: str
-    email: str | None = None
-    phone: str | None = None
-    notes: str | None = None
+#class ClientCreate(BaseModel):
+#    name: str
+#    email: str | None = None
+#    phone: str | None = None
+#    notes: str | None = None
 
 
 # =====================================================
