@@ -8,6 +8,7 @@ from app.api.routes_sessions import router as sessions_router
 
 #from app.schemas import ClientCreate
 from app.schemas import ( ClientCreate,  ClientUpdate)
+from datetime import datetime
 
 print("🔥 APP STARTED")
 
@@ -186,13 +187,18 @@ def get_clients(user=Depends(get_current_user)):
             .table("clients")
             .select("*")
             .eq("psychologist_id", user.id)
+            .eq("is_archived", False)
+            .order("created_at", desc=True)
             .execute()
         )
 
         return res.data
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # =====================================================
@@ -229,3 +235,140 @@ def update_client(
             status_code=500,
             detail=str(e)
         )
+
+# =====================================================
+# GET ARCHIVED CLIENTS
+# =====================================================
+
+@app.get("/clients/archive")
+def get_archived_clients(
+    user=Depends(get_current_user)
+):
+    try:
+
+        supabase = get_supabase()
+
+        res = (
+            supabase
+            .table("clients")
+            .select("*")
+            .eq("psychologist_id", user.id)
+            .eq("is_archived", True)
+            .order("archived_at", desc=True)
+            .execute()
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# =====================================================
+# ARCHIVE CLIENT
+# =====================================================
+
+@app.patch("/clients/{client_id}/archive")
+def archive_client(
+    client_id: str,
+    user=Depends(get_current_user)
+):
+    try:
+
+        supabase = get_supabase()
+
+        res = (
+            supabase
+            .table("clients")
+            .update({
+                "is_archived": True,
+                "archived_at": datetime.utcnow().isoformat()
+            })
+            .eq("id", client_id)
+            .eq("psychologist_id", user.id)
+            .execute()
+        )
+
+        return {
+            "status": "archived",
+            "client_id": client_id
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# =====================================================
+# RESTORE CLIENT
+# =====================================================
+
+@app.patch("/clients/{client_id}/restore")
+def restore_client(
+    client_id: str,
+    user=Depends(get_current_user)
+):
+    try:
+
+        supabase = get_supabase()
+
+        (
+            supabase
+            .table("clients")
+            .update({
+                "is_archived": False,
+                "archived_at": None
+            })
+            .eq("id", client_id)
+            .eq("psychologist_id", user.id)
+            .execute()
+        )
+
+        return {
+            "status": "restored",
+            "client_id": client_id
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# =====================================================
+# GET CLIENT BY ID
+# =====================================================
+
+@app.get("/clients/{client_id}")
+def get_client(
+    client_id: str,
+    user=Depends(get_current_user)
+):
+    try:
+
+        supabase = get_supabase()
+
+        res = (
+            supabase
+            .table("clients")
+            .select("*")
+            .eq("id", client_id)
+            .eq("psychologist_id", user.id)
+            .single()
+            .execute()
+        )
+
+        return res.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+
+
