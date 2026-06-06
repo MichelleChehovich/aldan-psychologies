@@ -4,13 +4,12 @@ from pydantic import BaseModel
 
 from app.deps import get_current_user
 from app.supabase import get_supabase
-from app.api.routes_sessions import router as sessions_router
 
-#from app.schemas import ClientCreate
+from app.api.routes_sessions import router as sessions_router
+from app.api.routes_clients import router as clients_router
+
 from app.schemas import ( ClientCreate,  ClientUpdate)
 from datetime import datetime
-
-print("🔥 APP STARTED")
 
 app = FastAPI()
 
@@ -31,6 +30,7 @@ app.add_middleware(
 # =====================================================
 
 app.include_router(sessions_router)
+app.include_router(clients_router)
 
 
 # =====================================================
