@@ -28,11 +28,6 @@ class PsychologistOut(BaseModel):
 # =====================================================
 
 class ClientCreate(BaseModel):
-#    name: str
-#    email: Optional[str] = None
-#    phone: Optional[str] = None
-#    notes: Optional[str] = None
-
     name: str
 
     email: str | None = None
@@ -42,19 +37,13 @@ class ClientCreate(BaseModel):
     birth_date: str | None = None
 
     notes: str | None = None
+    client_status: str | None = "active"
+
+    first_contact_at: str | None = None
+    therapy_finished_at: str | None = None
+
 
 class ClientOut(BaseModel):
-#    id: str
-#    psychologist_id: str
-#    name: str
-#    email: Optional[str] = None
-#    phone: Optional[str] = None
-#    notes: Optional[str] = None
-#    created_at: Optional[datetime] = None
-
-#    class Config:
-#        from_attributes = True
-
     id: str
     psychologist_id: str
 
@@ -69,6 +58,14 @@ class ClientOut(BaseModel):
     notes: str | None = None
 
     created_at: datetime | None = None
+
+    client_status: str | None = None
+
+    first_contact_at: str | None = None
+    therapy_finished_at: str | None = None
+
+    is_archived: bool | None = None
+    archived_at: str | None = None
 
     class Config:
         from_attributes = True
@@ -88,6 +85,10 @@ class ClientUpdate(BaseModel):
     birth_date: str | None = None
 
     notes: str | None = None
+    client_status: str | None = None
+
+    first_contact_at: str | None = None
+    therapy_finished_at: str | None = None
 
 
 # =====================================================
