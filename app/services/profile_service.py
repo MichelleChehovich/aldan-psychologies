@@ -118,6 +118,15 @@ async def upload_profile_photo(
             await out_file.write(chunk)
 
     # -----------------------------------------
+    # -----------------------------------------
+    # PUBLIC URL
+    # -----------------------------------------
+
+    photo_url = (
+        f"/storage/profile_photos/{filename}"
+    )
+
+    # -----------------------------------------
     # UPDATE PROFILE
     # -----------------------------------------
 
@@ -125,7 +134,7 @@ async def upload_profile_photo(
         supabase
         .table("profiles")
         .update({
-            "photo_url": file_path
+            "photo_url": photo_url
         })
         .eq("id", psychologist_id)
         .execute()
@@ -137,7 +146,7 @@ async def upload_profile_photo(
 
     return {
         "status": "uploaded",
-        "photo_url": file_path,
+        "photo_url": photo_url,
         "filename": filename,
         "size_bytes": size
     }
