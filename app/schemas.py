@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Optional
-
 from pydantic import BaseModel
-
 
 # =====================================================
 # AUTH
@@ -163,3 +161,107 @@ class SessionSelfAnalysisUpdate(BaseModel):
 
 class SessionAudioUpdate(BaseModel):
     audio_url: str
+
+# =====================================================
+# ProfileUpdate: Karta Psichologis
+# =====================================================
+
+class ProfileUpdate(BaseModel):
+
+    surname: str | None = None
+    name: str | None = None
+    patronymic: str | None = None
+
+    photo_url: str | None = None
+
+    phone: str | None = None
+    telegram: str | None = None
+    whatsapp: str | None = None
+    vk: str | None = None
+
+    city: str | None = None
+    country: str | None = None
+
+    birth_date: str | None = None
+
+    profession: str | None = None
+    specialization: str | None = None
+
+    education: str | None = None
+    additional_education: str | None = None
+    certifications: str | None = None
+
+    experience_years: int | None = None
+
+    work_format: str | None = None
+
+    about_me: str | None = None
+
+    website: str | None = None
+    instagram: str | None = None
+    youtube: str | None = None
+
+    session_price: float | None = None
+    currency: str | None = None
+
+    default_session_duration: int | None = None
+
+# =====================================================
+# ProfileOut: изменения в karta Psichologis
+# =====================================================
+
+class ProfileOut(BaseModel):    
+    id: str
+    email: str | None = None
+    role: str | None = None
+
+    surname: str | None = None
+    name: str | None = None
+    patronymic: str | None = None
+
+    photo_url: str | None = None
+
+    phone: str | None = None
+    telegram: str | None = None
+    whatsapp: str | None = None
+    vk: str | None = None
+
+    city: str | None = None
+    country: str | None = None
+
+    birth_date: str | None = None
+
+    profession: str | None = None
+    specialization: str | None = None
+
+    education: str | None = None
+    additional_education: str | None = None
+    certifications: str | None = None
+
+    experience_years: int | None = None
+
+    work_format: str | None = None
+
+    about_me: str | None = None
+
+    website: str | None = None
+    instagram: str | None = None
+    youtube: str | None = None
+
+    session_price: float | None = None
+    currency: str | None = None
+
+    default_session_duration: int | None = None
+
+    created_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
+
+
+
+
+
+
