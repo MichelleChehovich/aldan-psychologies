@@ -14,6 +14,8 @@ from app.services.profile_service import (
     upload_profile_photo
 )
 
+from fastapi.responses import FileResponse
+
 router = APIRouter(
     prefix="/profile",
     tags=["profile"]
@@ -92,3 +94,12 @@ async def upload_photo(
             status_code=500,
             detail=str(e)
         )
+
+@router.get("/photo/{filename}")
+def get_profile_photo(filename: str):
+
+    file_path = (
+        f"storage/profile_photos/{filename}"
+    )
+
+    return FileResponse(file_path)
