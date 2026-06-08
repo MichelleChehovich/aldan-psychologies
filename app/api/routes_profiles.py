@@ -11,7 +11,7 @@ from app.schemas import (ProfileUpdate)
 from app.services.profile_service import (
     get_profile,
     update_profile,
-    #upload_profile_photo
+    upload_profile_photo
 )
 
 router = APIRouter(
@@ -73,22 +73,22 @@ def patch_profile(
 # UPLOAD PHOTO
 # =====================================================
 
-#@router.post("/upload-photo")
-#async def upload_photo(
-#    file: UploadFile = File(...),
-#    user=Depends(get_current_user)
-#):
-#    try:
+@router.post("/upload-photo")
+async def upload_photo(
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    try:
 
-#        result = await upload_profile_photo(
-#            psychologist_id=user.id,
-#            file=file
-#        )
+        result = await upload_profile_photo(
+            psychologist_id=user.id,
+            file=file
+        )
 
-#       return result
+        return result
 
-#    except Exception as e:
-#        raise HTTPException(
-#            status_code=500,
-#            detail=str(e)
-#        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
