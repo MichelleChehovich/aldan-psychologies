@@ -1,31 +1,43 @@
-import httpx
-import os
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+from openai import OpenAI
+from app.config import get_provider_config
 
 
-async def download_audio(audio_url: str):
-    async with httpx.AsyncClient() as client:
-        response = await client.get(audio_url)
-        response.raise_for_status()
-        return response.content
+def get_transcription_client(provider: str = "proxyapi") -> OpenAI:
+    """
+    Create OpenAI client for transcription based on provider.
+    Создайте клиент OpenAI для транскрипции на основе провайдера.
+    """
+    config = get_provider_config(provider)
+    return OpenAI(
+        api_key=config["api_key"],
+        base_url=config["base_url"],
+    )
 
 
-async def transcribe_audio(audio_bytes: bytes):
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}"
-    }
+def get_transcription_model(provider: str = "proxyapi") -> str:
+    """
+    Get transcription model for specific provider.
+    Получите модель транскрипции для конкретного провайдера.
+    """
+    config = get_provider_config(provider)
+    return config["transcription_model"]
 
-    files = {
-        "file": ("audio.mp3", audio_bytes),
-        "model": (None, "whisper-1")
-    }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api.openai.com/v1/audio/transcriptions",
-            headers=headers,
-            files=files
+async def transcribe_audio(
+    audio_file_path: str,
+    provider: str = "proxyapi",
+) -> str:
+    """
+    Transcribe audio file using specified provider.
+    Returns the transcription text.
+    Расшифруйте аудиофайл с помощью указанного провайдера.
+    Возвращает текст транскрипции.
+    """
+    client = get_transcription_client(provider)
+    model = get_transcription_model(provider)
+
+    with open(audio_file_path, "rb") as audio_file:
+        transcription = client.audio.transcriptions.create(
+            model=model,
+            file=audio_file,
         )
-        response.raise_for_status()
-        return response.json()["text"]
