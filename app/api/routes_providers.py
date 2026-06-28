@@ -4,6 +4,8 @@ from app.config import LLM_PROVIDERS, PROVIDER_DESCRIPTIONS
 from app.supabase import get_supabase
 from app.deps import get_current_user
 
+import traceback
+
 router = APIRouter(prefix="/providers", tags=["providers"])
 
 
@@ -11,7 +13,6 @@ router = APIRouter(prefix="/providers", tags=["providers"])
 async def list_providers():
     """
     Return list of all available LLM providers configured on the server.
-    No DB access needed — just server configuration.
     """
     available = []
     for code, config in LLM_PROVIDERS.items():
@@ -35,6 +36,7 @@ async def select_provider(
     """
     Save user's preferred LLM provider to their profile.
     """
+    # Step 1: validate provider
     if provider not in LLM_PROVIDERS:
         raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
 
@@ -44,9 +46,29 @@ async def select_provider(
             detail=f"Provider '{provider}' is not configured (API key missing)",
         )
 
-    supabase = get_supabase()
-    supabase.table("profiles").update({
-        "llm_provider": provider,
-    }).eq("id", psychologist_id).execute()
+    # Step 2: get supabase client
+    try:
+        supabase = get_supabase()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get Supabase client: {str(e)}"
+        )
 
-    return {"status": "ok", "provider": provider}
+    # Step 3: update profile
+    try:
+        result = (
+            supabase.table("profiles")
+            .update({"llm_provider": provider})
+            .eq("id", psychologist_id)
+            .execute()
+        )
+        return {"status": "ok", "provider": provider}
+    except Exception as e:
+        # Print full traceback to server logs
+        print("ERROR in select_provider:")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
