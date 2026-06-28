@@ -10,6 +10,7 @@ from app.schemas import ( ClientCreate,  ClientUpdate)
 from app.api.routes_sessions import router as sessions_router
 from app.api.routes_clients import router as clients_router
 from app.api.routes_profiles import router as profiles_router
+from app.api.routes_providers import router as providers_router
 
 app = FastAPI()
 
@@ -32,6 +33,7 @@ app.add_middleware(
 app.include_router(sessions_router)
 app.include_router(clients_router)
 app.include_router(profiles_router)
+app.include_router(providers_router, prefix="/api")
 
 # =====================================================
 # SCHEMAS
