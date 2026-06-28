@@ -284,7 +284,7 @@ async def upload_self_analysis_audio_endpoint(
 async def start_processing(
     session_id: str,
     background_tasks: BackgroundTasks,
-    psychologist_id: str = Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     """
     Start background audio processing pipeline for a session.
@@ -292,9 +292,10 @@ async def start_processing(
     background_tasks.add_task(
         process_session_audio,
         session_id,
-        psychologist_id,
+        user.id,  # ← передаём user.id, а не объект user
     )
     return {"status": "processing_started", "session_id": session_id}
+
 
 # =====================================================
 # Получите текущее состояние всех агентов обработки
@@ -303,7 +304,7 @@ async def start_processing(
 @router.get("/{session_id}/agents")
 async def get_agents_status(
     session_id: str,
-    psychologist_id: str = Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     """
     Get current status of all processing agents for a session.
