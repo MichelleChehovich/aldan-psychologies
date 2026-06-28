@@ -1,4 +1,5 @@
 from fastapi import (
+    BackgroundTasks,
     APIRouter,
     Depends,
     HTTPException,
@@ -7,6 +8,8 @@ from fastapi import (
 )
 
 from app.deps import get_current_user
+from app.services.tasks.session_processing import process_session_audio
+from app.services.agent_task_service import get_agent_statuses
 
 from app.schemas import (
     SessionCreate,
@@ -273,3 +276,37 @@ async def upload_self_analysis_audio_endpoint(
             detail=str(e)
         )
 
+# =====================================================
+# Запустите конвейер фоновой обработки звука для сеанса.
+# =====================================================
+
+@router.post("/{session_id}/process")
+async def start_processing(
+    session_id: str,
+    background_tasks: BackgroundTasks,
+    psychologist_id: str = Depends(get_current_user),
+):
+    """
+    Start background audio processing pipeline for a session.
+    """
+    background_tasks.add_task(
+        process_session_audio,
+        session_id,
+        psychologist_id,
+    )
+    return {"status": "processing_started", "session_id": session_id}
+
+# =====================================================
+# Получите текущее состояние всех агентов обработки
+# =====================================================
+
+@router.get("/{session_id}/agents")
+async def get_agents_status(
+    session_id: str,
+    psychologist_id: str = Depends(get_current_user),
+):
+    """
+    Get current status of all processing agents for a session.
+    """
+    result = get_agent_statuses(session_id)
+    return result.data
