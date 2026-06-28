@@ -76,9 +76,8 @@ def get_agent_statuses(session_id: str):
     Returns Supabase response object — use .data to access list.
     """
     supabase = get_supabase()
-    return (
-        supabase.table("agent_tasks")
-        .select("*")
-        .eq("session_id", session_id)
-        .order("created_at")
+    return supabase.table("agent_tasks") \
+        .select("*") \
+        .eq("session_id", session_id) \
+        .order("created_at") \
         .execute()
