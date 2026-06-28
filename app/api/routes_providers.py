@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.config import LLM_PROVIDERS, PROVIDER_DESCRIPTIONS, DEFAULT_PROVIDER
+from app.config import LLM_PROVIDERS, PROVIDER_DESCRIPTIONS
 from app.supabase import get_supabase
 from app.deps import get_current_user
 
@@ -8,27 +8,11 @@ router = APIRouter(prefix="/providers", tags=["providers"])
 
 
 @router.get("")
-async def list_providers(psychologist_id: str = Depends(get_current_user)):
+async def list_providers():
     """
-    Return list of available LLM providers and the current user selection.
+    Return list of all available LLM providers configured on the server.
+    No DB access needed — just server configuration.
     """
-    supabase = get_supabase()
-
-    # Current user's provider
-    profile = (
-        supabase.table("profiles")
-        .select("llm_provider")
-        .eq("id", psychologist_id)
-        .single()
-        .execute()
-    )
-    current = (
-        profile.data.get("llm_provider", DEFAULT_PROVIDER)
-        if profile.data
-        else DEFAULT_PROVIDER
-    )
-
-    # Build available providers list (only those with API key set)
     available = []
     for code, config in LLM_PROVIDERS.items():
         if config.get("api_key"):
@@ -40,7 +24,6 @@ async def list_providers(psychologist_id: str = Depends(get_current_user)):
 
     return {
         "providers": available,
-        "current": current,
     }
 
 
@@ -50,10 +33,10 @@ async def select_provider(
     psychologist_id: str = Depends(get_current_user),
 ):
     """
-    Set user's preferred LLM provider.
+    Save user's preferred LLM provider to their profile.
     """
     if provider not in LLM_PROVIDERS:
-        raise HTTPException(status_code=400, detail="Unknown provider")
+        raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
 
     if not LLM_PROVIDERS[provider].get("api_key"):
         raise HTTPException(
