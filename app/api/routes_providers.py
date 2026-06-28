@@ -31,12 +31,15 @@ async def list_providers():
 @router.patch("/select")
 async def select_provider(
     provider: str,
-    psychologist_id: str = Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     """
     Save user's preferred LLM provider to their profile.
     """
-    # Step 1: validate provider
+    # Extract psychologist_id from user object
+    psychologist_id = user.id
+    
+    # Validate provider
     if provider not in LLM_PROVIDERS:
         raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
 
@@ -46,27 +49,17 @@ async def select_provider(
             detail=f"Provider '{provider}' is not configured (API key missing)",
         )
 
-    # Step 2: get supabase client
-    try:
-        supabase = get_supabase()
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get Supabase client: {str(e)}"
-        )
+    # Get supabase client
+    supabase = get_supabase()
 
-    # Step 3: update profile
+    # Update profile
     try:
-        result = (
-            supabase.table("profiles")
-            .update({"llm_provider": provider})
-            .eq("id", psychologist_id)
-            .execute()
-        )
+        supabase.table("profiles").update({
+            "llm_provider": provider,
+        }).eq("id", psychologist_id).execute()
+        
         return {"status": "ok", "provider": provider}
     except Exception as e:
-        # Print full traceback to server logs
-        print("ERROR in select_provider:")
         traceback.print_exc()
         raise HTTPException(
             status_code=500,
