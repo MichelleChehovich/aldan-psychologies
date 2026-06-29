@@ -338,3 +338,21 @@ async def test_transcription(
         return {"status": "ok", "transcript": transcript[:500] + "..."}
     except Exception as e:
         return {"error": str(e)}
+
+
+# =====================================================
+# READ PROCESSING LOG
+# =====================================================
+
+@router.get("/processing-log")
+async def get_processing_log(user=Depends(get_current_user)):
+    """Read processing log"""
+    try:
+        with open("/app/storage/processing.log", "r") as f:
+            return {"log": f.read()}
+    except FileNotFoundError:
+        return {"log": "No log file yet"}
+
+
+# В самом конце файла (если есть):
+# return router
