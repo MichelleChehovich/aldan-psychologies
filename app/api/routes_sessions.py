@@ -311,3 +311,30 @@ async def get_agents_status(
     """
     result = get_agent_statuses(session_id)
     return result.data
+
+# =====================================================
+# Быстрый тест в обход всего пайплайна  для проверки только транскрибации
+# =====================================================
+
+@router.post("/test-transcription")
+async def test_transcription(
+    provider: str = "proxyapi",
+    user=Depends(get_current_user),
+):
+    """Test transcription with a small audio file"""
+    from app.stt import transcribe_audio
+    import os
+    
+    # Use the last uploaded audio file, or specify path
+    audio_dir = "storage/temp_audio/sessions"
+    files = os.listdir(audio_dir)
+    if not files:
+        return {"error": "No audio files found"}
+    
+    audio_path = os.path.join(audio_dir, files[-1])
+    
+    try:
+        transcript = await transcribe_audio(audio_path, provider)
+        return {"status": "ok", "transcript": transcript[:500] + "..."}
+    except Exception as e:
+        return {"error": str(e)}
