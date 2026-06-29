@@ -5,7 +5,6 @@ from app.config import get_provider_config
 def get_transcription_client(provider: str = "proxyapi") -> OpenAI:
     """
     Create OpenAI client for transcription based on provider.
-    Создайте клиент OpenAI для транскрипции на основе провайдера.
     """
     config = get_provider_config(provider)
     return OpenAI(
@@ -17,7 +16,6 @@ def get_transcription_client(provider: str = "proxyapi") -> OpenAI:
 def get_transcription_model(provider: str = "proxyapi") -> str:
     """
     Get transcription model for specific provider.
-    Получите модель транскрипции для конкретного провайдера.
     """
     config = get_provider_config(provider)
     return config["transcription_model"]
@@ -30,14 +28,36 @@ async def transcribe_audio(
     """
     Transcribe audio file using specified provider.
     Returns the transcription text.
-    Расшифруйте аудиофайл с помощью указанного провайдера.
-    Возвращает текст транскрипции.
     """
-    client = get_transcription_client(provider)
-    model = get_transcription_model(provider)
+    from app.config import LLM_PROVIDERS
+    
+    config = LLM_PROVIDERS[provider]
+    api_key = config["api_key"]
+    base_url = config["base_url"]
+    model = config["transcription_model"]
 
-    with open(audio_file_path, "rb") as audio_file:
-        transcription = client.audio.transcriptions.create(
-            model=model,
-            file=audio_file,
-        )
+    # Use httpx directly to avoid multipart issues with OpenAI SDK
+    import httpx
+    
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        with open(audio_file_path, "rb") as audio_file:
+            files = {
+                "file": ("audio.mp3", audio_file, "audio/mpeg"),
+                "model": (None, model),
+            }
+            
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+            }
+            
+            response = await client.post(
+                f"{base_url}/audio/transcriptions",
+                headers=headers,
+                files=files,
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"Transcription failed: {response.status_code} - {response.text}")
+            
+            result = response.json()
+            return result.get("text", "")
