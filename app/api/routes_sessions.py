@@ -9,8 +9,7 @@ from fastapi import (
 
 from app.deps import get_current_user
 from app.supabase import get_supabase
-from app.services.tasks.session_processing import process_session_audio, 
-                                                  process_session_transcript
+from app.services.tasks.session_processing import process_session_audio, process_session_transcript
 
 from app.services.agent_task_service import get_agent_statuses
 
