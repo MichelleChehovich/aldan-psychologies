@@ -8,6 +8,7 @@ from fastapi import (
 )
 
 from app.deps import get_current_user
+from app.supabase import get_supabase
 from app.services.tasks.session_processing import process_session_audio
 from app.services.agent_task_service import get_agent_statuses
 
@@ -385,6 +386,8 @@ async def upload_transcript(
     user=Depends(get_current_user),
 ):
     """Upload transcript text file to session"""
+    from app.supabase import get_supabase
+    
     try:
         # Read file content
         content = await file.read()
@@ -403,5 +406,3 @@ async def upload_transcript(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# В самом конце файла (если есть):
-# return router
