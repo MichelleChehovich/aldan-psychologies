@@ -374,7 +374,34 @@ async def test_llm(provider: str = "proxyapi", user=Depends(get_current_user)):
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
+# =====================================================
+# Эндпоинт для загрузки текстового транскрипта
+# =====================================================
 
+@router.post("/{session_id}/upload-transcript")
+async def upload_transcript(
+    session_id: str,
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+):
+    """Upload transcript text file to session"""
+    try:
+        # Read file content
+        content = await file.read()
+        transcript_text = content.decode("utf-8")
+        
+        # Update session
+        supabase = get_supabase()
+        supabase.table("sessions").update({
+            "transcript": transcript_text
+        }).eq("id", session_id).eq("psychologist_id", user.id).execute()
+        
+        return {
+            "status": "uploaded",
+            "transcript_length": len(transcript_text)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # В самом конце файла (если есть):
 # return router
