@@ -22,14 +22,14 @@ LLM_PROVIDERS = {
         "base_url": "https://api.proxyapi.ru/openai/v1",
         "api_key": os.getenv("PROXYAPI_KEY"),
         "transcription_model": "gpt-4o-transcribe",
-        "chat_model": "gpt-4o-mini",
+        "chat_model": "gpt-4.1-mini",
     },
     "openrouter": {
         "name": "OpenRouter",
         "base_url": "https://openrouter.ai/api/v1",
         "api_key": os.getenv("OPENROUTER_KEY"),
         "transcription_model": "openai/whisper-1",
-        "chat_model": "openai/gpt-4o-mini",
+        "chat_model": "openai/gpt-5-mini",
     },
     "openai": {
         "name": "OpenAI Direct",
