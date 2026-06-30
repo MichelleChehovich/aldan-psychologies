@@ -348,7 +348,31 @@ async def test_transcription(
     except Exception as e:
         return {"error": str(e)}
 
+# =====================================================
+# Эндпоинт для проверки LLM
+# =====================================================
 
+@router.post("/test-llm")
+async def test_llm(provider: str = "proxyapi", user=Depends(get_current_user)):
+    """Test LLM chat completion"""
+    from app.llm import chat_completion
+    
+    test_prompt = "Привет! Скажи 'тест пройден' и больше ничего."
+    
+    try:
+        result = await chat_completion(
+            messages=[{"role": "user", "content": test_prompt}],
+            provider=provider,
+            max_tokens=50,
+        )
+        return {
+            "status": "ok",
+            "provider": provider,
+            "response": result,
+            "length": len(result) if result else 0,
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 
