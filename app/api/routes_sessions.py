@@ -408,3 +408,24 @@ async def upload_transcript(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# =====================================================
+# Эндпоинт начала работы пайплайна с текстового транскрипта
+# =====================================================
+
+@router.post("/{session_id}/process-transcript")
+async def start_transcript_processing(
+    session_id: str,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_user),
+):
+    """
+    Start background processing for a session that already has transcript text.
+    Skips transcription, goes straight to editing and summarization.
+    """
+    background_tasks.add_task(
+        process_session_transcript,
+        session_id,
+        user.id,
+    )
+    return {"status": "processing_started", "session_id": session_id}
+
