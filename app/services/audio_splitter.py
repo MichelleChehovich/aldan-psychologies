@@ -1,6 +1,6 @@
 import os
-import math
-from pydub import AudioSegment
+import subprocess
+import json
 
 
 def split_audio(
@@ -12,9 +12,6 @@ def split_audio(
     Split audio file into chunks under max_size_mb each.
     Uses ffmpeg directly to avoid loading entire file into memory.
     """
-    import subprocess
-    import json
-    
     # Get audio duration using ffprobe (fast, no memory usage)
     result = subprocess.run(
         ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file_path],
