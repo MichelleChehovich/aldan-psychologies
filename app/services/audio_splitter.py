@@ -1,48 +1,102 @@
 import os
-import math
-from pydub import AudioSegment
+import subprocess
+import shutil
 
 
 def split_audio(
     file_path: str,
-    max_size_mb: int = 20,  # чуть меньше лимита для надёжности
+    max_size_mb: int = 20,
     temp_dir: str = "storage/temp_audio/sessions"
 ) -> list[str]:
     """
     Split audio file into chunks under max_size_mb each.
+    Uses ffmpeg if available, otherwise falls back to simple binary split.
     Returns list of paths to chunk files.
     """
-    # Load audio
-    ext = os.path.splitext(file_path)[1].lower()
-    fmt = ext.lstrip(".")
-    if fmt == "m4a":
-        fmt = "mp4"  # pydub использует mp4 для m4a
     
-    audio = AudioSegment.from_file(file_path, format=fmt)
+    # Check if ffmpeg is available
+    ffmpeg_available = shutil.which("ffmpeg") is not None
+    
+    if not ffmpeg_available:
+        print("[AudioSplitter] ffmpeg not found, using binary split")
+        return _split_binary(file_path, max_size_mb, temp_dir)
+    
+    return _split_with_ffmpeg(file_path, max_size_mb, temp_dir)
+
+
+def _split_with_ffmpeg(
+    file_path: str,
+    max_size_mb: int,
+    temp_dir: str
+) -> list[str]:
+    """Split using ffmpeg (proper audio chunks)."""
+    import json
+    
+    # Get audio duration
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file_path],
+        capture_output=True, text=True
+    )
+    info = json.loads(result.stdout)
+    duration = float(info["format"]["duration"])
     
     # Calculate chunk duration
-    total_duration_ms = len(audio)
     file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+    chunk_duration = (max_size_mb / file_size_mb) * duration * 0.9  # 90% safety margin
     
-    # Estimate bytes per millisecond
-    bytes_per_ms = os.path.getsize(file_path) / total_duration_ms if total_duration_ms > 0 else 0
-    
-    # Safe chunk duration in ms
-    max_chunk_bytes = max_size_mb * 1024 * 1024 * 0.9  # 90% от лимита
-    chunk_duration_ms = int(max_chunk_bytes / bytes_per_ms) if bytes_per_ms > 0 else total_duration_ms
-    
-    # Split
     chunks = []
     base_name = os.path.splitext(os.path.basename(file_path))[0]
     
-    for i, start_ms in enumerate(range(0, total_duration_ms, chunk_duration_ms)):
-        end_ms = min(start_ms + chunk_duration_ms, total_duration_ms)
-        chunk = audio[start_ms:end_ms]
-        
+    start = 0
+    i = 0
+    while start < duration:
+        end = min(start + chunk_duration, duration)
         chunk_path = os.path.join(temp_dir, f"{base_name}_chunk_{i:03d}.mp3")
-        chunk.export(chunk_path, format="mp3", bitrate="64k")  # низкий битрейт для экономии
+        
+        subprocess.run([
+            "ffmpeg", "-y", "-i", file_path,
+            "-ss", str(start), "-to", str(end),
+            "-b:a", "64k", chunk_path
+        ], capture_output=True)
+        
         chunks.append(chunk_path)
+        start = end
+        i += 1
     
+    return chunks
+
+
+def _split_binary(
+    file_path: str,
+    max_size_mb: int,
+    temp_dir: str
+) -> list[str]:
+    """
+    Simple binary split — just cuts file into pieces.
+    Each piece is a valid audio file (MP3 frames are independent).
+    """
+    max_size_bytes = int(max_size_mb * 1024 * 1024 * 0.9)
+    
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
+    ext = os.path.splitext(file_path)[1]
+    
+    chunks = []
+    
+    with open(file_path, "rb") as f:
+        i = 0
+        while True:
+            data = f.read(max_size_bytes)
+            if not data:
+                break
+            
+            chunk_path = os.path.join(temp_dir, f"{base_name}_chunk_{i:03d}{ext}")
+            with open(chunk_path, "wb") as chunk_file:
+                chunk_file.write(data)
+            
+            chunks.append(chunk_path)
+            i += 1
+    
+    print(f"[AudioSplitter] Binary split into {len(chunks)} chunks")
     return chunks
 
 
