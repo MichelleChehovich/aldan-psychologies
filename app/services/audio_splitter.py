@@ -10,41 +10,53 @@ def split_audio(
 ) -> list[str]:
     """
     Split audio file into chunks under max_size_mb each.
-    Returns list of paths to chunk files.
+    Uses ffmpeg directly to avoid loading entire file into memory.
     """
-    # Determine format
-    ext = os.path.splitext(file_path)[1].lower().lstrip(".")
+    import subprocess
+    import json
     
-    # pydub uses "mp4" for m4a files
-    fmt = "mp4" if ext == "m4a" else ext
+    # Get audio duration using ffprobe (fast, no memory usage)
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file_path],
+        capture_output=True, text=True
+    )
+    info = json.loads(result.stdout)
+    duration = float(info["format"]["duration"])
     
-    print(f"[AudioSplitter] Loading {file_path} as {fmt}, size: {os.path.getsize(file_path) / (1024*1024):.1f} MB")
+    file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+    print(f"[AudioSplitter] File: {file_size_mb:.1f} MB, Duration: {duration:.1f}s")
     
-    audio = AudioSegment.from_file(file_path, format=fmt)
-    
-    total_duration_ms = len(audio)
-    file_size_bytes = os.path.getsize(file_path)
-    bytes_per_ms = file_size_bytes / total_duration_ms if total_duration_ms > 0 else 0
-    
-    max_chunk_bytes = max_size_mb * 1024 * 1024 * 0.9
-    chunk_duration_ms = int(max_chunk_bytes / bytes_per_ms) if bytes_per_ms > 0 else total_duration_ms
-    
-    # Ensure minimum chunk size
-    chunk_duration_ms = max(chunk_duration_ms, 60000)  # at least 1 minute
+    # Calculate chunk duration (seconds)
+    chunk_duration = (max_size_mb / file_size_mb) * duration * 0.9  # 90% safety
     
     chunks = []
     base_name = os.path.splitext(os.path.basename(file_path))[0]
     
-    for i, start_ms in enumerate(range(0, total_duration_ms, chunk_duration_ms)):
-        end_ms = min(start_ms + chunk_duration_ms, total_duration_ms)
-        chunk = audio[start_ms:end_ms]
-        
+    start = 0
+    i = 0
+    while start < duration:
+        end = min(start + chunk_duration, duration)
         chunk_path = os.path.join(temp_dir, f"{base_name}_chunk_{i:03d}.mp3")
-        chunk.export(chunk_path, format="mp3", bitrate="64k")
+        
+        # Use ffmpeg to extract chunk directly (no memory load)
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", file_path,
+            "-ss", str(start),
+            "-to", str(end),
+            "-b:a", "64k",
+            "-ac", "1",  # mono to save space
+            chunk_path
+        ]
+        
+        subprocess.run(cmd, capture_output=True, check=True)
         
         chunk_size = os.path.getsize(chunk_path) / (1024 * 1024)
         print(f"[AudioSplitter] Chunk {i}: {chunk_size:.1f} MB")
         chunks.append(chunk_path)
+        
+        start = end
+        i += 1
     
     print(f"[AudioSplitter] Split into {len(chunks)} chunks")
     return chunks
