@@ -3,16 +3,6 @@ from app.services.agent_task_service import update_agent_status, AGENT_STATUS
 from app.services.audio_splitter import split_audio, cleanup_chunks
 import os
 
-async def process(self, audio_file_path: str) -> str:
-    try:
-        # DEBUG
-        print(f"[TranscriptionAgent] File path: {audio_file_path}")
-        print(f"[TranscriptionAgent] Exists: {os.path.exists(audio_file_path)}")
-        if os.path.exists(audio_file_path):
-            print(f"[TranscriptionAgent] Size: {os.path.getsize(audio_file_path) / (1024*1024):.1f} MB")
-        
-        update_agent_status(self.session_id, self.agent_name, AGENT_STATUS["in_progress"])
-
 
 class TranscriptionAgent:
     def __init__(self, session_id: str, provider: str = "proxyapi"):
@@ -22,6 +12,12 @@ class TranscriptionAgent:
 
     async def process(self, audio_file_path: str) -> str:
         try:
+            # DEBUG
+            print(f"[TranscriptionAgent] File path: {audio_file_path}")
+            print(f"[TranscriptionAgent] Exists: {os.path.exists(audio_file_path)}")
+            if os.path.exists(audio_file_path):
+                print(f"[TranscriptionAgent] Size: {os.path.getsize(audio_file_path) / (1024*1024):.1f} MB")
+            
             update_agent_status(self.session_id, self.agent_name, AGENT_STATUS["in_progress"])
 
             file_size_mb = os.path.getsize(audio_file_path) / (1024 * 1024)
@@ -31,7 +27,6 @@ class TranscriptionAgent:
                 chunks = split_audio(audio_file_path, max_size_mb=20)
                 print(f"[TranscriptionAgent] Split into {len(chunks)} chunks")
                 
-                # Process chunks SEQUENTIALLY to preserve order
                 transcripts = []
                 for i, chunk_path in enumerate(chunks):
                     print(f"[TranscriptionAgent] Transcribing chunk {i+1}/{len(chunks)}...")
