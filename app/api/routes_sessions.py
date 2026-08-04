@@ -428,3 +428,69 @@ async def start_transcript_processing(
     )
     return {"status": "processing_started", "session_id": session_id}
 
+# =====================================================
+# Эндпоинт для transcribe-self-analysis
+# =====================================================
+
+@router.post("/{session_id}/transcribe-self-analysis")
+async def transcribe_self_analysis(
+    session_id: str,
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+):
+    """
+    Fast STT for self-analysis audio.
+    Returns transcript text immediately — does NOT save to DB.
+    """
+    import os
+    import uuid
+    from app.stt import transcribe_audio
+    from app.config import DEFAULT_PROVIDER, LLM_PROVIDERS
+    
+    # Validate file type
+    ALLOWED_TYPES = ["audio/webm", "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/m4a"]
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Unsupported audio format")
+    
+    # Save temp file
+    temp_dir = "storage/temp_audio/self_analysis"
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    extension = os.path.splitext(file.filename)[1] or ".webm"
+    temp_filename = f"temp_{session_id}_{uuid.uuid4()}{extension}"
+    temp_path = os.path.join(temp_dir, temp_filename)
+    
+    # Read file and save
+    content = await file.read()
+    if len(content) > 25 * 1024 * 1024:  # 25 MB limit for ProxyAPI
+        raise HTTPException(status_code=400, detail="File too large (max 25 MB)")
+    
+    with open(temp_path, "wb") as f:
+        f.write(content)
+    
+    # Get provider
+    supabase = get_supabase()
+    try:
+        profile = supabase.table("profiles").select("llm_provider").eq("id", user.id).execute()
+        provider = profile.data[0].get("llm_provider", DEFAULT_PROVIDER) if profile.data else DEFAULT_PROVIDER
+    except:
+        provider = DEFAULT_PROVIDER
+    
+    # Transcribe
+    try:
+        transcript = await transcribe_audio(temp_path, provider)
+        # Clean up temp file
+        try:
+            os.remove(temp_path)
+        except:
+            pass
+        
+        return {"transcript": transcript}
+    except Exception as e:
+        # Clean up on error
+        try:
+            os.remove(temp_path)
+        except:
+            pass
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
