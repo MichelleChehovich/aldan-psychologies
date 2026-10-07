@@ -15,7 +15,7 @@ from app.api.routes_providers import router as providers_router
 app = FastAPI()
 
 # =====================================================
-# CORS
+# C O R S
 # =====================================================
 
 app.add_middleware(
